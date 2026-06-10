@@ -5,6 +5,18 @@ import { verifyJwt } from "./lib/jwks.js";
 
 const logger = createLogger("resource");
 
+// The "protected resource". In a real system this would be a database query
+// scoped to the authenticated user; here it's a hard-coded directory so the
+// /api/xaa flow has something concrete to display.
+const TEAM_DIRECTORY = [
+  { name: "Alice Anderson", title: "Identity Engineer", email: "alice@acme.test" },
+  { name: "Bob Brown", title: "Security Architect", email: "bob@acme.test" },
+  { name: "Carol Chen", title: "Platform Lead", email: "carol@acme.test" },
+  { name: "Dave Davis", title: "Backend Engineer", email: "dave@acme.test" },
+  { name: "Eve Edwards", title: "AI Agent Developer", email: "eve@acme.test" },
+  { name: "Frank Foster", title: "Product Manager", email: "frank@acme.test" },
+];
+
 const server = http.createServer(async (req, res) => {
   if (req.method === "GET" && req.url === "/healthz") {
     res.writeHead(200, { "content-type": "application/json" });
@@ -22,7 +34,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   try {
-    const { header, payload } = await verifyJwt(m[1], {
+    const { payload } = await verifyJwt(m[1], {
       jwksUrl: oktaUrls.customAsKeys,
       expectedIssuer: oktaUrls.customAsIssuer,
     });
@@ -32,12 +44,11 @@ const server = http.createServer(async (req, res) => {
       JSON.stringify(
         {
           ok: true,
-          message: `Hello, ${payload.sub}`,
-          path: req.url,
-          method: req.method,
-          tokenSummary: { iss: payload.iss, aud: payload.aud, scp: payload.scp, exp: payload.exp },
-          tokenHeader: header,
-          tokenPayload: payload,
+          requestedBy: {
+            sub: payload.sub,
+            scope: payload.scp ?? null,
+          },
+          team: TEAM_DIRECTORY,
         },
         null,
         2,

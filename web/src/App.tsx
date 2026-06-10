@@ -23,18 +23,25 @@ export default function App() {
 
   return (
     <div className="flex h-screen flex-col">
-      <header className="shrink-0 border-b border-slate-200 bg-white">
+      <header className="shrink-0 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
         <div className="flex items-center justify-between px-6 py-3">
-          <div>
-            <h1 className="text-base font-semibold leading-tight">Okta XAA flow inspector</h1>
-            <p className="text-xs text-slate-500">
-              Cross App Access · ID-JAG token exchange · live wire trace
-            </p>
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-indigo-500 to-violet-600 shadow-lg shadow-indigo-500/30">
+              <span className="text-sm font-bold text-white">X</span>
+            </div>
+            <div>
+              <h1 className="text-sm font-semibold leading-tight text-slate-100">
+                Okta Cross App Access · Flow Inspector
+              </h1>
+              <p className="text-[11px] text-slate-500">
+                ID-JAG token exchange · live wire trace
+              </p>
+            </div>
           </div>
           {me?.user && (
             <button
               onClick={logout}
-              className="rounded border border-slate-300 px-3 py-1 text-sm hover:bg-slate-100"
+              className="rounded-md border border-slate-700 bg-slate-800/50 px-3 py-1.5 text-xs font-medium text-slate-300 transition hover:border-slate-600 hover:bg-slate-800 hover:text-slate-100"
             >
               Log out
             </button>

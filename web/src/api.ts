@@ -1,33 +1,33 @@
+import axios, { AxiosError } from "axios";
 import type { MeResponse, XaaResult } from "./types";
 
-async function jsonFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  const res = await fetch(input, { credentials: "include", ...init });
-  const text = await res.text();
-  let body: unknown = text;
-  try {
-    body = JSON.parse(text);
-  } catch {
-    /* keep text */
-  }
-  if (!res.ok) {
-    const err = new Error(
-      typeof body === "object" && body && "message" in body
-        ? String((body as { message: unknown }).message)
-        : `HTTP ${res.status}`,
-    ) as Error & { body?: unknown; status?: number };
-    err.body = body;
-    err.status = res.status;
-    throw err;
-  }
-  return body as T;
-}
+const http = axios.create({ withCredentials: true });
 
 export const api = {
-  me: () => jsonFetch<MeResponse>("/auth/me"),
-  logout: () => jsonFetch<{ ok: boolean }>("/auth/logout", { method: "POST" }),
-  runXaa: async (): Promise<{ ok: boolean; data: XaaResult | Record<string, unknown> }> => {
-    const res = await fetch("/api/xaa", { method: "POST", credentials: "include" });
-    const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-    return { ok: res.ok, data };
+  async me(): Promise<MeResponse> {
+    const { data } = await http.get<MeResponse>("/auth/me");
+    return data;
+  },
+
+  async logout(): Promise<void> {
+    await http.post("/auth/logout");
+  },
+
+  /**
+   * Runs the XAA flow on the backend. The backend returns a partial result
+   * (with whatever httpCalls succeeded) even on error, so we surface that
+   * uniformly instead of throwing.
+   */
+  async runXaa(): Promise<{ ok: boolean; data: Partial<XaaResult> & { message?: string } }> {
+    try {
+      const { data } = await http.post<XaaResult>("/api/xaa");
+      return { ok: true, data };
+    } catch (e) {
+      const err = e as AxiosError<Partial<XaaResult> & { message?: string; error?: string }>;
+      return {
+        ok: false,
+        data: err.response?.data ?? { message: err.message },
+      };
+    }
   },
 };
